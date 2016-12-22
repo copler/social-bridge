@@ -1,0 +1,14 @@
+---
+
+applications:
+
+- name: social-bridge
+  memory: 512M
+  buildpack: java_buildpack
+  path: build\libs\social-bridge-0.0.1-SNAPSHOT.jar
+  instances: 1
+  random-route: false
+  route: social-bridge
+  host: social-bridge
+  env:
+    SPRING_PROFILES_ACTIVE: pcf
