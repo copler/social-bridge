@@ -3,9 +3,11 @@ package com.copler.social.bridge.facebook;
 import org.springframework.social.connect.Connection;
 import org.springframework.social.connect.ConnectionRepository;
 import org.springframework.social.facebook.api.Facebook;
+import org.springframework.social.facebook.api.ImageType;
 import org.springframework.social.facebook.api.PagedList;
-import org.springframework.social.facebook.api.Reference;
 import org.springframework.social.facebook.api.User;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
 import javax.inject.Inject;
@@ -27,17 +29,39 @@ public class FacebookController {
     }
 
     @RequestMapping(value = "/search/users", method = RequestMethod.GET)
-    public PagedList<Reference> searchUsers(@RequestParam("query") String query) {
-        return facebook.userOperations().search(query);
+    public PagedList<User> searchUsers(@RequestParam("query") String query) {
+        // return facebook.userOperations().search(query);
+        return search(query);
+    }
+
+    private PagedList<User> search(String query) {
+        MultiValueMap<String, String> queryMap = new LinkedMultiValueMap<String, String>();
+        queryMap.add("q", query);
+        queryMap.add("type", "user");
+        return facebook.fetchConnections("search", null, User.class, queryMap,
+                "id, name, picture");
     }
 
     @RequestMapping(value = "/user/{id}", method = RequestMethod.GET)
     public User user(@PathVariable("id") String objectId) {
         Connection<Facebook> connection = connectionRepository.findPrimaryConnection(Facebook.class);
         // User user = connection.getApi().userOperations().getUserProfile();
-        User user = facebook.fetchObject(objectId, User.class, PROFILE_FIELDS);
+        return facebook.fetchObject(objectId, User.class, PROFILE_FIELDS);
+    }
 
-        return user;
+    @RequestMapping(value = "/user/{id}/picture", method = RequestMethod.GET)
+    public byte[] userPicture(@PathVariable("id") String userId, @RequestParam("type") String type) {
+        return facebook.userOperations().getUserProfileImage(userId, selectUsePictureType(type));
+    }
+
+    private static ImageType selectUsePictureType(String imageTypeStr) {
+        if (imageTypeStr == null) return ImageType.NORMAL;
+        String imageTypeStrUpperCase = imageTypeStr.toUpperCase();
+        for (ImageType imageType : ImageType.values()) {
+            if (imageType.name().equals(imageTypeStrUpperCase))
+                return imageType;
+        }
+        return ImageType.NORMAL;
     }
 
     private static final String[] PROFILE_FIELDS = {
