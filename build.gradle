@@ -40,13 +40,10 @@ dependencies {
 
 //    compile('org.springframework.boot:spring-boot-starter-jersey')
 
-    compile "org.springframework.social:spring-social-config:$springSocialVersion"
-    compile "org.springframework.social:spring-social-core:$springSocialVersion"
-    compile "org.springframework.social:spring-social-web:$springSocialVersion"
+    compile "com.restfb:restfb:$restFbVersion"
 
 //    compile('org.springframework.boot:spring-boot-starter-social-facebook')
-    compile "org.springframework.social:spring-social-facebook:$springSocialFacebookVersion"
-    compile "org.springframework.social:spring-social-facebook-web:$springSocialFacebookVersion"
+
 
 //    compile('org.springframework.boot:spring-boot-starter-social-linkedin')
 //    compile('org.springframework.boot:spring-boot-starter-social-twitter')
