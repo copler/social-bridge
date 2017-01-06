@@ -1,5 +1,8 @@
 package com.copler.social.bridge.facebook;
 
+import com.copler.social.bridge.facebook.dto.UserDto;
+import com.copler.social.bridge.facebook.services.UserDataService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.social.connect.Connection;
 import org.springframework.social.connect.ConnectionRepository;
 import org.springframework.social.facebook.api.Facebook;
@@ -11,6 +14,9 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Andrew on 12/22/2016.
@@ -21,6 +27,9 @@ public class FacebookController {
 
     private Facebook facebook;
     private ConnectionRepository connectionRepository;
+
+    @Autowired
+    private UserDataService userDataService;
 
     @Inject
     public FacebookController(Facebook facebook, ConnectionRepository connectionRepository) {
@@ -40,6 +49,40 @@ public class FacebookController {
         queryMap.add("type", "user");
         return facebook.fetchConnections("search", null, User.class, queryMap,
                 "id, name, picture");
+    }
+
+    @RequestMapping(value = "/search/users", method = RequestMethod.POST)
+    public List<UserDto> searchUsers(@RequestBody List<UserDto> userDtos) {
+        List<UserDto> users = new ArrayList<>();
+        for (UserDto userDto : userDtos) {
+            UserDto userDtoCached = userDataService.getUser(userDto);
+            if (!userDtoCached.getFacebookId().isEmpty()) {
+                users.add(userDtoCached);
+                continue;
+            }
+            PagedList<User> facebookUsers = search(userDto.getName());
+            for (User facebookUser : facebookUsers) {
+                if (facebookUser.getName().equals(userDto.getName())) {
+                    userDto.setFacebookId(facebookUser.getId());
+                    userDto.setPicture(getPictureURL(facebookUser));
+                    users.add(userDto);
+                    userDataService.putUser(userDto);
+                    break;
+                }
+            }
+        }
+        return users;
+    }
+
+    private String getPictureURL(final User facebookUser) {
+        String url = "";
+        Map<String, Object> extraData = facebookUser.getExtraData();
+        if (!extraData.isEmpty()) {
+            Map picture = (Map) extraData.get("picture");
+            Map data = (Map) picture.get("data");
+            url = (String) data.get("url");
+        }
+        return url;
     }
 
     @RequestMapping(value = "/user/{id}", method = RequestMethod.GET)
