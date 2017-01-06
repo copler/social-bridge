@@ -11,6 +11,7 @@ import org.springframework.social.facebook.api.PagedList;
 import org.springframework.social.facebook.api.User;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.inject.Inject;
@@ -56,7 +57,7 @@ public class FacebookController {
         List<UserDto> users = new ArrayList<>();
         for (UserDto userDto : userDtos) {
             UserDto userDtoCached = userDataService.getUser(userDto);
-            if (!userDtoCached.getFacebookId().isEmpty()) {
+            if (!StringUtils.isEmpty(userDtoCached.getFacebookId())) {
                 users.add(userDtoCached);
                 continue;
             }
